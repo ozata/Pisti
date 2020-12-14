@@ -8,8 +8,6 @@ using UnityEngine;
 public class Card : MonoBehaviour
 {
 
-
-
     [SerializeField]
     private Sprite sprite;
     public Sprite Sprite {
