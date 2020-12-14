@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
 
 public class DeckManager : MonoBehaviour {
+
+    const int START_CARD_NUMBER = 4;
+
+    AddGameObjectToListEvent addCard;
+
     private static DeckManager _instance;
     public static DeckManager Instance { get { return _instance; } }
     private void Awake()
@@ -19,14 +26,63 @@ public class DeckManager : MonoBehaviour {
 
     public GameObject cardPrefab;
     public GameObject playerArea;
-    public List<GameObject> deck;
+    public GameObject opponentArea;
+    public GameObject gameArea;
+
+    [HideInInspector] public List<GameObject> deck;
+    [HideInInspector] public List<GameObject> playerList;
+    [HideInInspector] public List<GameObject> opponentList;
+    [HideInInspector] public List<GameObject> gameList;
 
     public Sprite[] sprites;
+    // A backside of a card
+    public Sprite closedCard;
 
     void Start() {
+
+        if (addCard == null)
+            addCard = new AddGameObjectToListEvent();
+
+        addCard.AddListener(AddCardObjectToList);
+        addCard.AddListener(MoveCardToAreaUI);
+
+
         CreateDeck();
         FisherYatesCardDeckShuffle();
-        Debug.Log(deck[0].GetComponent<Card>().Rank);
+        InitFirstFourCards();
+    }
+
+    // listId: 0 = gameList, 1 = playerList, 2 = opponentList
+    void AddCardObjectToList(GameObject card, int listId) {
+        if(listId == 0){
+            gameList.Add(card);
+        } else if(listId == 1){
+            playerList.Add(card);
+        } else if (listId == 2) {
+            opponentList.Add(card);
+        }
+    }
+
+    void MoveCardToAreaUI(GameObject card, int listId) {
+        if(listId == 0){
+            card.transform.SetParent(gameArea.transform, false);
+        } else if(listId == 1){
+            card.transform.SetParent(playerArea.transform, false);
+        } else if (listId == 2) {
+            card.transform.SetParent(opponentArea.transform, false);
+        }
+    }
+
+    public void OnClickCard() {
+        addCard.Invoke(UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject, 0);
+    }
+
+    void InitFirstFourCards(){
+        for(int i = 0 ; i < START_CARD_NUMBER; i++) {
+            addCard.Invoke(deck[i] , 0);
+            addCard.Invoke(deck[i+START_CARD_NUMBER] , 2);
+            addCard.Invoke(deck[i+(START_CARD_NUMBER*2)] , 1);
+        }
     }
 
     // Initialize cards
@@ -38,7 +94,6 @@ public class DeckManager : MonoBehaviour {
                 card = Instantiate(cardPrefab, new Vector3(0,0,0), Quaternion.identity);
                 card.GetComponent<Card>().Suit = i;
                 card.GetComponent<Card>().Rank = j;
-                card.transform.SetParent(playerArea.transform, false);
                 if(i == 1) {
                     card.GetComponent<Image>().sprite = sprites[0];
                 } else if(i == 2) {
@@ -90,4 +145,10 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
+    #region Events
+    [System.Serializable]
+    public class AddGameObjectToListEvent : UnityEvent<GameObject, int>
+    {
+    }
+    #endregion
 }
