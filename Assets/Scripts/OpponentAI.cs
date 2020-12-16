@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class OpponentAI : MonoBehaviour
 {
-    // This might be better as a Hashmap<String,int>
+    // This might be better as a Hashmap<String,int> to check if have the card that is on top etc
+    // Maybe create a hashmap copy of the list for AI operations
     public List<GameObject> opponentList;
 
     // This is the core AI function of the opponent
@@ -22,6 +23,6 @@ public class OpponentAI : MonoBehaviour
 
 
     void ChooseCardToPlay(){
-        
+    
     }
 }

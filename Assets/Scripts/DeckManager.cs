@@ -5,15 +5,21 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using System.Collections;
+using System;
 
+
+using Random = UnityEngine.Random;
 
 public enum CardList {GAMELIST, PLAYERLIST, OPPONENTLIST, CLOSEDLIST, PLAYERWINLIST, OPPONENTWINLIST};
 
 public class DeckManager : MonoBehaviour {
 
-    const int START_CARD_NUMBER = 4;
-    const int NUMBER_OF_PLAYERS = 2;
+    // TODO: Beware static variables, find another way it it's not good
+    public static int MAX_CARD_ON_DECK = 52;
+    public static int START_CARD_NUMBER = 4;
+    public static int NUMBER_OF_PLAYERS = 2;
 
+    // TODO: Check if there's need for events
     public AddGameObjectToListEvent addCard;
     public UnityEvent handWin;
 
@@ -37,6 +43,9 @@ public class DeckManager : MonoBehaviour {
     public GameObject activeCardArea;
     public GameObject gameArea;
 
+    public GameObject playerWinArea;
+    public GameObject opponentWinArea;
+
     public OpponentAI opponentAI;
 
     // Starting deck of cards
@@ -44,13 +53,16 @@ public class DeckManager : MonoBehaviour {
     // Cards in player's hand in current time
     [HideInInspector] public List<GameObject> playerList;
     // Cards that player won
-    [HideInInspector] public List<GameObject> playerWonList;
+    [HideInInspector] public List<GameObject> playerWinList;
     // Cards in opponent's hand in current time
     [HideInInspector] public List<GameObject> opponentList;
     // Cards that opponent won
-    [HideInInspector] public List<GameObject> opponentWonList;
-    // Cards in middle in current time
+    [HideInInspector] public List<GameObject> opponentWinList;
+
+    // TODO: Check if this is better as Stack rather than List
+    // Cards that is on game table in current time
     [HideInInspector] public List<GameObject> gameList;
+
     // Cards that are not opened yet
     [HideInInspector] public List<GameObject> closedList;
 
@@ -78,24 +90,32 @@ public class DeckManager : MonoBehaviour {
 
     void Start() {
         CreateDeck();
+        InitDecks();
+    }
+
+    void InitDecks(){
         FisherYatesCardDeckShuffle();
         InitCards();
         CloseThreeOfFirstFourCards();
+        // Assign Card On Top as CardOnTop
         CardOnTop = gameList[START_CARD_NUMBER - 1];
     }
-
 
     public void AddOneCardToGameList(){
         if(closedList.Count > 0 ){
             GameObject card = closedList[0];
-            Debug.Log(closedList[0].GetComponent<Image>().sprite);
+            // Remove the card from the list
             closedList.Remove(card);
-            Debug.Log(closedList[0].GetComponent<Image>().sprite);
+            // Make this card CardOnTop Since this card is going to be only card on game list
+            CardOnTop = card;
+            addCard.Invoke(card, CardList.GAMELIST);
+        } else {
+            Debug.Log("One hand is finished, calculate score.");
+            InitDecks();
         }
     }
 
-    public int GetCardOnTopValue(){
-
+    public int[] GetCardOnTopValue(){
         return GetCardValue(CardOnTop);
     }
 
@@ -112,10 +132,14 @@ public class DeckManager : MonoBehaviour {
     void AddCardObjectToList(GameObject card, CardList cardListType) {
         if(cardListType == CardList.GAMELIST){
             gameList.Add(card);
+            closedList.Remove(card);
         } else if(cardListType == CardList.PLAYERLIST){
+            print("Entered to player list: " + card);
             playerList.Add(card);
+            closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
         } else if (cardListType == CardList.OPPONENTLIST) {
+            closedList.Remove(card);
             card.transform.GetChild(0).GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(0,0,0,255);
             CloseOrOpenCard(card);
             opponentAI.opponentList.Add(card);
@@ -123,68 +147,80 @@ public class DeckManager : MonoBehaviour {
             closedList.Add(card);
         } else if(cardListType == CardList.PLAYERWINLIST){
             playerWinList.Add(card);
+            playerList.Remove(card);
         } else if(cardListType == CardList.OPPONENTWINLIST){
             opponentWinList.Add(card);
+            opponentList.Remove(card);
         }
     }
 
 
-    void AddWinsToWinner(){
-
-    }
-
+    void AddWinsToWinner(){}
 
     void MoveCardToAreaUI(GameObject card, CardList cardListType) {
         if(cardListType == CardList.GAMELIST){
             card.transform.SetParent(activeCardArea.transform, false);
             card.transform.GetComponent<RectTransform>().anchoredPosition = new Vector2(Random.Range(100,200),Random.Range(-280,-320));
         } else if(cardListType == CardList.PLAYERLIST){
-            card.transform.SetParent(playerArea.transform, true);
+            card.transform.SetParent(playerArea.transform, false);
         } else if (cardListType == CardList.OPPONENTLIST) {
             card.transform.SetParent(opponentArea.transform, false);
         } else if (cardListType == CardList.CLOSEDLIST) {
-            //card.transform.SetParent(opponentArea.transform, false);
+            card.transform.SetParent(closedCardsArea.transform, false);
         } else if (cardListType == CardList.PLAYERWINLIST) {
-            //card.transform.SetParent(opponentArea.transform, false);
+            card.transform.SetParent(playerWinArea.transform, false);
         } else if (cardListType == CardList.OPPONENTWINLIST) {
-
+            card.transform.SetParent(opponentWinArea.transform, false);
         }
     }
 
     // Add card to active object list
     public void OnClickCard() {
-        //GameSystem.Instance.CheckGameStatus(UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject);
         if(GameSystem.Instance.state == GameState.PLAYERTURN){
             GameObject card = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
-            addCard.Invoke(card, 0);
-            GameSystem.Instance.state = GameState.OPPONENTTURN;
-            if(GetCardValue(CardOnTop) == GetCardValue(card)){
-                print("player won current hand");
-                AddCardsToWinningList(1);
-                CardOnTop = null;
-
-            }else{
-                CardOnTop = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
-            }
-
+            print("Clicked card: " + card);
+            GameSystem.Instance.PlayGame(card);
             StartCoroutine(opponentAI.Play());
         }
     }
 
-    public void AddCardsToWinningList(int listId){
+    public void AddCardsToWinningList(CardList list){
         for(int i = 0; i < gameList.Count ; i++){
-            addCard.Invoke(gameList[i], 1);
-            Debug.Log(gameList.Count);
+            print("Add Card to: " + list);
+            addCard.Invoke(gameList[i], list);
         }
+    }
+
+    void ClearGameList(){
         gameList.Clear();
     }
 
-    void InitCards(){
+
+    public void InitCards(){
         for(int i = 0 ; i < START_CARD_NUMBER; i++) {
-            addCard.Invoke(deck[i] , 0);
-            addCard.Invoke(deck[i+START_CARD_NUMBER] , 2);
-            addCard.Invoke(deck[i+(START_CARD_NUMBER*2)] , 1);
+            addCard.Invoke(deck[i] , CardList.GAMELIST);
+            addCard.Invoke(deck[i+START_CARD_NUMBER] , CardList.OPPONENTLIST);
+            addCard.Invoke(deck[i+(START_CARD_NUMBER*2)] , CardList.PLAYERLIST);
         }
+        // Add rest of the cards to the closed cards list, which are yet to be opened
+        for(int i = START_CARD_NUMBER * 3 ; i < MAX_CARD_ON_DECK ; i++) {
+            addCard.Invoke(deck[i], CardList.CLOSEDLIST);
+        }
+
+    }
+
+    // Deal cards after no card left in the hands of Player
+    public void DealCards(){
+        for(int i = 0 ; i < START_CARD_NUMBER; i++) {
+            if(closedList.Count > 0 ){
+                addCard.Invoke(closedList[0] , CardList.OPPONENTLIST);
+                addCard.Invoke(closedList[0] , CardList.PLAYERLIST);
+            }
+        }
+
+        if(gameList.Count == 0){
+            AddOneCardToGameList();
+        };
     }
 
     void CloseThreeOfFirstFourCards(){
@@ -195,10 +231,8 @@ public class DeckManager : MonoBehaviour {
 
     public void CloseOrOpenCard(GameObject card) {
         if(card.transform.GetChild(1).gameObject.active){
-            print("open card");
             card.transform.GetChild(1).gameObject.SetActive(false);
         } else {
-            print("close card");
             card.transform.GetChild(1).gameObject.SetActive(true);
         }
     }
@@ -265,8 +299,6 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
-
-
     void OnDisable() {
         if (addCard == null){
             addCard.RemoveListener(AddCardObjectToList);
@@ -277,6 +309,6 @@ public class DeckManager : MonoBehaviour {
 
     #region Events
     [System.Serializable]
-    public class AddGameObjectToListEvent : UnityEvent<GameObject, int>{ }
+    public class AddGameObjectToListEvent : UnityEvent<GameObject, CardList>{ }
     #endregion
 }
