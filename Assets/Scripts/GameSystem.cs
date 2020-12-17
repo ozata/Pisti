@@ -3,31 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-
-public enum GameState {START, PLAYERTURN, OPPONENTTURN, WON, LOST}
+public enum GameState {START, PLAYERTURN, OPPONENTTURN, PLAYERWON, OPPONENTWON}
+public enum LastHandWinner {PLAYER, OPPONENT}
 
 public class GameSystem : MonoBehaviour
 {
-    // One hand won
-    private bool currentHandWon;
-    // if this is 4 this means all cards in the hand of player is gone and run the dealCards function
+    // Deal cards check when cards on players are 0
     private int dealCards = 0;
-
-    private static GameSystem instance;
-    public static GameSystem Instance { get { return instance; } }
-
-    // Someone won the hand
-    public UnityEvent handWon;
-
     int[] cardValue;
 
-    void OnEnable(){
-        if (handWon == null){
-            handWon = new UnityEvent();
-        }
-        //handWon.AddListener(DeckManager.Instance.AddOneCardToGameList);
+    private static GameSystem instance;
+    // winner of last hand takes the cards on the table
+    private LastHandWinner lastHandWinner;
+    int lastTwoCardsPlayed = 0;
 
-    }
+    public static GameSystem Instance { get { return instance; } }
+
+
+    private bool lastHand = false;
 
     private void Awake()
     {
@@ -39,6 +32,16 @@ public class GameSystem : MonoBehaviour
         }
         cardValue = new int[2];
     }
+
+    public UnityEvent pisti;
+
+    void OnEnable(){
+        if (pisti == null){
+            pisti = new UnityEvent();
+        }
+        pisti.AddListener(ScoreManager.Instance.AddPisti);
+    }
+
     public GameState state;
 
     // Start is called before the first frame update
@@ -52,36 +55,66 @@ public class GameSystem : MonoBehaviour
         state = GameState.PLAYERTURN;
     }
 
+
+
     public void PlayGame(GameObject lastPlayedCard) {
         cardValue = DeckManager.Instance.GetCardValue(lastPlayedCard);
-        // Add the card to gameList, meaning, current game cards on the table
+        // Add the card to gameList, game cards on the table
         DeckManager.Instance.addCard.Invoke(lastPlayedCard, CardList.GAMELIST);
-
         if(GameSystem.Instance.state == GameState.PLAYERTURN) {
-            if(cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
-                Debug.Log("Player Win this turn!");
-                DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
-            }
-            GameSystem.Instance.state = GameState.OPPONENTTURN;
+            DeckManager.Instance.playerList.Remove(lastPlayedCard);
+            PlayerPlay();
         } else if(GameSystem.Instance.state == GameState.OPPONENTTURN) {
-           StartCoroutine(OpponentPlay());
+            DeckManager.Instance.opponentList.Remove(lastPlayedCard);
+            StartCoroutine(OpponentPlay());
         }
+        CheckDealCards();
+        CheckGameOver();
+        DeckManager.Instance.CardOnTop = DeckManager.Instance.gameList[DeckManager.Instance.gameList.Count - 1];
 
-        DeckManager.Instance.CardOnTop = lastPlayedCard;
+    }
+
+
+    void CheckGameOver() {
+        if(DeckManager.Instance.playerList.Count == 0 && DeckManager.Instance.closedList.Count == 0 && DeckManager.Instance.opponentList.Count == 0){
+            lastTwoCardsPlayed++;
+            if(lastTwoCardsPlayed == 2){
+                print("LAST CARD PLAYED");
+                DeckManager.Instance.LastHandWon(lastHandWinner);
+            }
+        }
+    }
+
+    #region Play functions
+    void PlayerPlay(){
+        if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+            lastHandWinner = LastHandWinner.PLAYER;
+            if(DeckManager.Instance.GetNumberOfCardsOnTable() == 2) {
+                pisti.Invoke();
+            }
+            DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
+        }
+        GameSystem.Instance.state = GameState.OPPONENTTURN;
+    }
+
+    IEnumerator OpponentPlay(){
+        if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+            lastHandWinner = LastHandWinner.OPPONENT;
+            yield return new WaitForSeconds(0.1f);
+            if(DeckManager.Instance.GetNumberOfCardsOnTable() == 2){
+                pisti.Invoke();
+            }
+            DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
+        }
+        GameSystem.Instance.state = GameState.PLAYERTURN;
+    }
+    #endregion
+
+    void CheckDealCards(){
         dealCards++;
         if(dealCards == DeckManager.START_CARD_NUMBER * DeckManager.NUMBER_OF_PLAYERS) {
             DealCardsToPlayers();
         }
-    }
-
-
-    IEnumerator OpponentPlay(){
-         if(cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
-                yield return new WaitForSeconds(0.5f);
-                Debug.Log("Opponent Win this turn!");
-                DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
-            }
-        GameSystem.Instance.state = GameState.PLAYERTURN;
     }
 
     void DealCardsToPlayers() {
@@ -89,5 +122,9 @@ public class GameSystem : MonoBehaviour
         dealCards = 0;
     }
 
-
+    void OnDisable() {
+        if (pisti != null){
+            pisti.RemoveListener(ScoreManager.Instance.AddPisti);
+        }
+    }
 }

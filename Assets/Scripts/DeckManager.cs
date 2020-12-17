@@ -12,16 +12,32 @@ using Random = UnityEngine.Random;
 
 public enum CardList {GAMELIST, PLAYERLIST, OPPONENTLIST, CLOSEDLIST, PLAYERWINLIST, OPPONENTWINLIST};
 
+
+// Club = 1, Spade = 2, Diamond = 3, Heart = 4
 public class DeckManager : MonoBehaviour {
+
+    // add cards on table to the last one player
+    private bool playerWonLastHand = false;
 
     // TODO: Beware static variables, find another way it it's not good
     public static int MAX_CARD_ON_DECK = 52;
     public static int START_CARD_NUMBER = 4;
     public static int NUMBER_OF_PLAYERS = 2;
 
+    #region Values
+    public static int ACE = 1;
+    public static int JACK = 11;
+    #endregion
+
+    #region Ranks
+    public static int CLUB = 1;
+    public static int SPADES = 2;
+    public static int DIAMOND = 3;
+    public static int HEART = 4;
+    #endregion
+
     // TODO: Check if there's need for events
     public AddGameObjectToListEvent addCard;
-    public UnityEvent handWin;
 
     private static DeckManager instance;
     public static DeckManager Instance { get { return instance; } }
@@ -80,17 +96,27 @@ public class DeckManager : MonoBehaviour {
     void OnEnable() {
         if (addCard == null){
             addCard = new AddGameObjectToListEvent();
-            handWin = new UnityEvent();
         }
+
 
         addCard.AddListener(AddCardObjectToList);
         addCard.AddListener(MoveCardToAreaUI);
-        handWin.AddListener(AddWinsToWinner);
+
     }
 
     void Start() {
         CreateDeck();
         InitDecks();
+    }
+
+
+    public void LastHandWon(LastHandWinner winner){
+        if(winner == LastHandWinner.PLAYER){
+            AddCardsToWinningList(CardList.PLAYERWINLIST);
+        } else if(winner == LastHandWinner.OPPONENT){
+            AddCardsToWinningList(CardList.OPPONENTWINLIST);
+        }
+        ScoreManager.Instance.FinalScore();
     }
 
     void InitDecks(){
@@ -109,9 +135,6 @@ public class DeckManager : MonoBehaviour {
             // Make this card CardOnTop Since this card is going to be only card on game list
             CardOnTop = card;
             addCard.Invoke(card, CardList.GAMELIST);
-        } else {
-            Debug.Log("One hand is finished, calculate score.");
-            InitDecks();
         }
     }
 
@@ -134,15 +157,15 @@ public class DeckManager : MonoBehaviour {
             gameList.Add(card);
             closedList.Remove(card);
         } else if(cardListType == CardList.PLAYERLIST){
-            print("Entered to player list: " + card);
             playerList.Add(card);
+            gameList.Remove(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
         } else if (cardListType == CardList.OPPONENTLIST) {
-            closedList.Remove(card);
-            card.transform.GetChild(0).GetComponent<TMPro.TextMeshProUGUI>().color = new Color32(0,0,0,255);
-            CloseOrOpenCard(card);
             opponentAI.opponentList.Add(card);
+            gameList.Remove(card);
+            closedList.Remove(card);
+            CloseOrOpenCard(card);
         } else if(cardListType == CardList.CLOSEDLIST){
             closedList.Add(card);
         } else if(cardListType == CardList.PLAYERWINLIST){
@@ -153,9 +176,6 @@ public class DeckManager : MonoBehaviour {
             opponentList.Remove(card);
         }
     }
-
-
-    void AddWinsToWinner(){}
 
     void MoveCardToAreaUI(GameObject card, CardList cardListType) {
         if(cardListType == CardList.GAMELIST){
@@ -178,7 +198,6 @@ public class DeckManager : MonoBehaviour {
     public void OnClickCard() {
         if(GameSystem.Instance.state == GameState.PLAYERTURN){
             GameObject card = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
-            print("Clicked card: " + card);
             GameSystem.Instance.PlayGame(card);
             StartCoroutine(opponentAI.Play());
         }
@@ -186,7 +205,6 @@ public class DeckManager : MonoBehaviour {
 
     public void AddCardsToWinningList(CardList list){
         for(int i = 0; i < gameList.Count ; i++){
-            print("Add Card to: " + list);
             addCard.Invoke(gameList[i], list);
         }
     }
@@ -206,7 +224,6 @@ public class DeckManager : MonoBehaviour {
         for(int i = START_CARD_NUMBER * 3 ; i < MAX_CARD_ON_DECK ; i++) {
             addCard.Invoke(deck[i], CardList.CLOSEDLIST);
         }
-
     }
 
     // Deal cards after no card left in the hands of Player
@@ -221,6 +238,8 @@ public class DeckManager : MonoBehaviour {
         if(gameList.Count == 0){
             AddOneCardToGameList();
         };
+
+
     }
 
     void CloseThreeOfFirstFourCards(){
@@ -238,7 +257,7 @@ public class DeckManager : MonoBehaviour {
     }
 
     // Initialize cards
-    // Club = 1, Spade = 2, Diamond = 3, Heart = 4
+    // Club = 1, Spades = 2, Diamond = 3, Heart = 4
     public void CreateDeck() {
         GameObject card;
         for(int i = 1; i < 5 ; i++) {
@@ -247,13 +266,13 @@ public class DeckManager : MonoBehaviour {
                 card.gameObject.name = i + " " + j;
                 card.GetComponent<Card>().Suit = i;
                 card.GetComponent<Card>().Rank = j;
-                if(i == 1) {
+                if(i == DeckManager.CLUB) {
                     card.GetComponent<Image>().sprite = sprites[0];
-                } else if(i == 2) {
+                } else if(i == DeckManager.SPADES) {
                     card.GetComponent<Image>().sprite = sprites[1];
-                } else if(i == 3) {
+                } else if(i == DeckManager.DIAMOND) {
                     card.GetComponent<Image>().sprite = sprites[2];
-                } else if(i == 4) {
+                } else if(i == DeckManager.HEART) {
                     card.GetComponent<Image>().sprite = sprites[3];
                 }
 
@@ -285,6 +304,10 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
+    public int GetNumberOfCardsOnTable() {
+        return gameList.Count;
+    }
+
     // Taken From: https://answers.unity.com/questions/486626/how-can-i-shuffle-alist.html
     void FisherYatesCardDeckShuffle () {
         System.Random _random = new System.Random ();
@@ -299,11 +322,11 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
+
     void OnDisable() {
-        if (addCard == null){
+        if (addCard != null){
             addCard.RemoveListener(AddCardObjectToList);
             addCard.RemoveListener(MoveCardToAreaUI);
-            handWin.RemoveListener(AddWinsToWinner);
         }
     }
 

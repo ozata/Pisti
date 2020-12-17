@@ -14,7 +14,7 @@ public class OpponentAI : MonoBehaviour
         // Remove card from the opponentList List.
         opponentList.Remove(card);
         // Wait for a second to simulate human thought process
-        yield return new WaitForSeconds(1F);
+        yield return new WaitForSeconds(0.1F);
         // Opponent Card will be closed so open the card UI
         DeckManager.Instance.CloseOrOpenCard(card);
         // Play the card
@@ -23,6 +23,6 @@ public class OpponentAI : MonoBehaviour
 
 
     void ChooseCardToPlay(){
-    
+
     }
 }
