@@ -87,13 +87,15 @@ public class GameSystem : MonoBehaviour
 
     #region Play functions
     void PlayerPlay(){
+
         if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.PLAYER;
-            if(DeckManager.Instance.GetNumberOfCardsOnTable() == 2) {
+            if(DeckManager.Instance.GetGameListCount() == 2) {
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
             DeckManager.Instance.RemoveAllCardsFromGameList();
+            DeckManager.Instance.GetGameListCount();
         }
         GameSystem.Instance.state = GameState.OPPONENTTURN;
     }
@@ -102,11 +104,12 @@ public class GameSystem : MonoBehaviour
         if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.OPPONENT;
             yield return new WaitForSeconds(0.1f);
-            if(DeckManager.Instance.GetNumberOfCardsOnTable() == 2){
+            if(DeckManager.Instance.GetGameListCount() == 2){
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
             DeckManager.Instance.RemoveAllCardsFromGameList();
+            DeckManager.Instance.GetGameListCount();
         }
         GameSystem.Instance.state = GameState.PLAYERTURN;
     }

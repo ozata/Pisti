@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -44,6 +45,15 @@ public class ScoreManager : MonoBehaviour
         string winner;
         playerScore += CalculateScore(DeckManager.Instance.playerWinList);
         opponentScore += CalculateScore(DeckManager.Instance.opponentWinList);
+
+
+        for (int i = 0; i < DeckManager.Instance.playerWinList.Count; i++)
+        {
+            print(DeckManager.Instance.playerWinList[i]);
+        }
+
+        print(DeckManager.Instance.playerWinList.Count);
+        print(DeckManager.Instance.opponentWinList.Count);
 
         if (DeckManager.Instance.playerWinList.Count > DeckManager.Instance.opponentWinList.Count)
         {
@@ -98,6 +108,8 @@ public class ScoreManager : MonoBehaviour
         }
         return score;
     }
+
+
 
 
 

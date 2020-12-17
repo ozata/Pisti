@@ -130,8 +130,6 @@ public class DeckManager : MonoBehaviour {
     public void AddOneCardToGameList(){
         if(closedList.Count > 0 ){
             GameObject card = closedList[0];
-            // Remove the card from the list
-            closedList.Remove(card);
             // Make this card CardOnTop Since this card is going to be only card on game list
             CardOnTop = card;
             addCard.Invoke(card, CardList.GAMELIST);
@@ -157,22 +155,24 @@ public class DeckManager : MonoBehaviour {
             gameList.Add(card);
             closedList.Remove(card);
         } else if(cardListType == CardList.PLAYERLIST){
-            playerList.Add(card);
             gameList.Remove(card);
+            playerList.Add(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
         } else if (cardListType == CardList.OPPONENTLIST) {
-            opponentAI.opponentList.Add(card);
             gameList.Remove(card);
+            opponentAI.opponentList.Add(card);
             closedList.Remove(card);
             CloseOrOpenCard(card);
         } else if(cardListType == CardList.CLOSEDLIST){
             closedList.Add(card);
         } else if(cardListType == CardList.PLAYERWINLIST){
-            playerWinList.Add(card);
+            if(!playerWinList.Contains(card) && !opponentWinList.Contains(card))
+                playerWinList.Add(card);
             playerList.Remove(card);
         } else if(cardListType == CardList.OPPONENTWINLIST){
-            opponentWinList.Add(card);
+            if(!playerWinList.Contains(card) && !opponentWinList.Contains(card))
+                opponentWinList.Add(card);
             opponentList.Remove(card);
         }
     }
@@ -205,7 +205,8 @@ public class DeckManager : MonoBehaviour {
 
     public void AddCardsToWinningList(CardList list){
         for(int i = 0; i < gameList.Count ; i++){
-            addCard.Invoke(gameList[i], list);
+            GameObject card = gameList[i];
+            addCard.Invoke(card, list);
         }
     }
 
@@ -215,7 +216,7 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
-    void ClearGameList(){
+    public void ClearGameList(){
         gameList.Clear();
     }
 
@@ -310,7 +311,7 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
-    public int GetNumberOfCardsOnTable() {
+    public int GetGameListCount() {
         return gameList.Count;
     }
 
