@@ -25,7 +25,7 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
-
+    // TODO: Jack does not give 20 points when makes a pisti, check with rules.
     public void AddPisti()
     {
         if (GameSystem.Instance.state == GameState.PLAYERTURN)
@@ -42,10 +42,6 @@ public class ScoreManager : MonoBehaviour
     public void FinalScore()
     {
         string winner;
-        print(DeckManager.Instance.playerWinList.Count);
-        print(DeckManager.Instance.opponentWinList.Count);
-
-        print("player score calculated = " + CalculateScore(DeckManager.Instance.playerWinList));
         playerScore += CalculateScore(DeckManager.Instance.playerWinList);
         opponentScore += CalculateScore(DeckManager.Instance.opponentWinList);
 

@@ -84,9 +84,12 @@ public class GameSystem : MonoBehaviour
 
     #region Play functions
     void PlayerPlay(){
-        if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+        bool jackWin = false;
+        if(cardValue[1] == DeckManager.JACK && DeckManager.Instance.GetGameListCount() > 1) jackWin = true;
+        if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.PLAYER;
             if(DeckManager.Instance.GetGameListCount() == 2) {
+                print("PLAYER PİŞTİ YAPTI");
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
@@ -95,10 +98,13 @@ public class GameSystem : MonoBehaviour
     }
 
     IEnumerator OpponentPlay(){
-        if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+        bool jackWin = false;
+        if(cardValue[1] == DeckManager.JACK && DeckManager.Instance.GetGameListCount() > 1) jackWin = true;
+        if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.OPPONENT;
             yield return new WaitForSeconds(0.1f);
             if(DeckManager.Instance.GetGameListCount() == 2){
+                print("OPPONENT PİŞTİ YAPTI");
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
