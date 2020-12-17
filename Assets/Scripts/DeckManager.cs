@@ -128,12 +128,8 @@ public class DeckManager : MonoBehaviour {
     }
 
     public void AddOneCardToGameList(){
-        if(closedList.Count > 0 ){
-            GameObject card = closedList[0];
-            // Make this card CardOnTop Since this card is going to be only card on game list
-            CardOnTop = card;
-            addCard.Invoke(card, CardList.GAMELIST);
-        }
+            CardOnTop = closedList[0];
+            addCard.Invoke(CardOnTop, CardList.GAMELIST);
     }
 
     public int[] GetCardOnTopValue(){
@@ -155,41 +151,37 @@ public class DeckManager : MonoBehaviour {
             gameList.Add(card);
             closedList.Remove(card);
         } else if(cardListType == CardList.PLAYERLIST){
-            gameList.Remove(card);
             playerList.Add(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
         } else if (cardListType == CardList.OPPONENTLIST) {
-            gameList.Remove(card);
-            opponentAI.opponentList.Add(card);
+            opponentList.Add(card);
             closedList.Remove(card);
             CloseOrOpenCard(card);
         } else if(cardListType == CardList.CLOSEDLIST){
             closedList.Add(card);
         } else if(cardListType == CardList.PLAYERWINLIST){
-            if(!playerWinList.Contains(card) && !opponentWinList.Contains(card))
-                playerWinList.Add(card);
-            playerList.Remove(card);
+            print("player win");
+            playerWinList.Add(card);
         } else if(cardListType == CardList.OPPONENTWINLIST){
-            if(!playerWinList.Contains(card) && !opponentWinList.Contains(card))
-                opponentWinList.Add(card);
-            opponentList.Remove(card);
+            print("opponent win");
+            opponentWinList.Add(card);
         }
     }
 
-    void MoveCardToAreaUI(GameObject card, CardList cardListType) {
-        if(cardListType == CardList.GAMELIST){
+    void MoveCardToAreaUI(GameObject card, CardList cardList) {
+        if(cardList == CardList.GAMELIST){
             card.transform.SetParent(activeCardArea.transform, false);
             card.transform.GetComponent<RectTransform>().anchoredPosition = new Vector2(Random.Range(100,200),Random.Range(-280,-320));
-        } else if(cardListType == CardList.PLAYERLIST){
+        } else if(cardList == CardList.PLAYERLIST){
             card.transform.SetParent(playerArea.transform, false);
-        } else if (cardListType == CardList.OPPONENTLIST) {
+        } else if (cardList == CardList.OPPONENTLIST) {
             card.transform.SetParent(opponentArea.transform, false);
-        } else if (cardListType == CardList.CLOSEDLIST) {
+        } else if (cardList == CardList.CLOSEDLIST) {
             card.transform.SetParent(closedCardsArea.transform, false);
-        } else if (cardListType == CardList.PLAYERWINLIST) {
+        } else if (cardList == CardList.PLAYERWINLIST) {
             card.transform.SetParent(playerWinArea.transform, false);
-        } else if (cardListType == CardList.OPPONENTWINLIST) {
+        } else if (cardList == CardList.OPPONENTWINLIST) {
             card.transform.SetParent(opponentWinArea.transform, false);
         }
     }
@@ -204,10 +196,12 @@ public class DeckManager : MonoBehaviour {
     }
 
     public void AddCardsToWinningList(CardList list){
+        print(gameList.Count);
         for(int i = 0; i < gameList.Count ; i++){
-            GameObject card = gameList[i];
-            addCard.Invoke(card, list);
+            addCard.Invoke(gameList[i], list);
         }
+        ClearGameList();
+        print("GameList after cleanup: " + gameList.Count);
     }
 
     public void RemoveAllCardsFromGameList(){

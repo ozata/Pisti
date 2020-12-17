@@ -70,32 +70,26 @@ public class GameSystem : MonoBehaviour
         }
         CheckDealCards();
         CheckGameOver();
-        DeckManager.Instance.CardOnTop = DeckManager.Instance.gameList[DeckManager.Instance.gameList.Count - 1];
+        if(DeckManager.Instance.gameList.Count > 0)
+            DeckManager.Instance.CardOnTop = DeckManager.Instance.gameList[DeckManager.Instance.gameList.Count - 1];
 
     }
 
 
     void CheckGameOver() {
         if(DeckManager.Instance.playerList.Count == 0 && DeckManager.Instance.closedList.Count == 0 && DeckManager.Instance.opponentList.Count == 0){
-            lastTwoCardsPlayed++;
-            if(lastTwoCardsPlayed == 2){
-                print("LAST CARD PLAYED");
-                DeckManager.Instance.LastHandWon(lastHandWinner);
-            }
+            DeckManager.Instance.LastHandWon(lastHandWinner);
         }
     }
 
     #region Play functions
     void PlayerPlay(){
-
         if(cardValue[1] == DeckManager.JACK || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.PLAYER;
             if(DeckManager.Instance.GetGameListCount() == 2) {
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
-            DeckManager.Instance.RemoveAllCardsFromGameList();
-            DeckManager.Instance.GetGameListCount();
         }
         GameSystem.Instance.state = GameState.OPPONENTTURN;
     }
@@ -108,8 +102,6 @@ public class GameSystem : MonoBehaviour
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
-            DeckManager.Instance.RemoveAllCardsFromGameList();
-            DeckManager.Instance.GetGameListCount();
         }
         GameSystem.Instance.state = GameState.PLAYERTURN;
     }

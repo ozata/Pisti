@@ -1098,7 +1098,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee01182dc64764c1eb968f9bf1ed3d8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  opponentList: []
 --- !u!1 &1545408017
 GameObject:
   m_ObjectHideFlags: 0
@@ -1143,9 +1142,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   addCard:
-    m_PersistentCalls:
-      m_Calls: []
-  handFinished:
     m_PersistentCalls:
       m_Calls: []
   deckArea: {fileID: 409769530}

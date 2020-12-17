@@ -28,7 +28,6 @@ public class ScoreManager : MonoBehaviour
 
     public void AddPisti()
     {
-        print("PİŞTİ OLDU");
         if (GameSystem.Instance.state == GameState.PLAYERTURN)
         {
             playerScore += 10;
@@ -43,17 +42,12 @@ public class ScoreManager : MonoBehaviour
     public void FinalScore()
     {
         string winner;
-        playerScore += CalculateScore(DeckManager.Instance.playerWinList);
-        opponentScore += CalculateScore(DeckManager.Instance.opponentWinList);
-
-
-        for (int i = 0; i < DeckManager.Instance.playerWinList.Count; i++)
-        {
-            print(DeckManager.Instance.playerWinList[i]);
-        }
-
         print(DeckManager.Instance.playerWinList.Count);
         print(DeckManager.Instance.opponentWinList.Count);
+
+        print("player score calculated = " + CalculateScore(DeckManager.Instance.playerWinList));
+        playerScore += CalculateScore(DeckManager.Instance.playerWinList);
+        opponentScore += CalculateScore(DeckManager.Instance.opponentWinList);
 
         if (DeckManager.Instance.playerWinList.Count > DeckManager.Instance.opponentWinList.Count)
         {
@@ -82,12 +76,15 @@ public class ScoreManager : MonoBehaviour
     {
         int score = 0;
         int[] cardValue;
-        for (int i = scoreList.Count; i < scoreList.Count; i++)
+        for (int i = 0; i < scoreList.Count; i++)
         {
             cardValue = DeckManager.Instance.GetCardValue(scoreList[i]);
+            print("Score List item: " + scoreList[i]);
+            print("Score List item value: " + cardValue[1]);
             // If Jack, 1 point added
             if (cardValue[1] == DeckManager.JACK)
             {
+
                 score += 1;
             }
             // Ace, 1 point added
