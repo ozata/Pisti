@@ -25,6 +25,11 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    public void CloseScoreText()
+    {
+        scoreText.SetActive(false);
+    }
+
     // TODO: Jack does not give 20 points when makes a pisti, check with rules.
     public void AddPisti()
     {
@@ -66,6 +71,10 @@ public class ScoreManager : MonoBehaviour
         }
         scoreText.SetActive(true);
         scoreText.GetComponent<TMPro.TextMeshProUGUI>().text = winner + " Won! Your score: " + playerScore + " Opponent score: " + opponentScore;
+
+        // Reset Scores
+        playerScore = 0;
+        opponentScore = 0;
     }
 
     int CalculateScore(List<GameObject> scoreList)

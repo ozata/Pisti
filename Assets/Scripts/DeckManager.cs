@@ -109,7 +109,6 @@ public class DeckManager : MonoBehaviour {
         InitDecks();
     }
 
-
     public void LastHandWon(LastHandWinner winner){
         if(winner == LastHandWinner.PLAYER){
             AddCardsToWinningList(CardList.PLAYERWINLIST);
@@ -117,9 +116,10 @@ public class DeckManager : MonoBehaviour {
             AddCardsToWinningList(CardList.OPPONENTWINLIST);
         }
         ScoreManager.Instance.FinalScore();
+        GameManager.Instance.ShowButtons();
     }
 
-    void InitDecks(){
+    public void InitDecks(){
         FisherYatesCardDeckShuffle();
         InitCards();
         CloseThreeOfFirstFourCards();
@@ -150,14 +150,17 @@ public class DeckManager : MonoBehaviour {
         if(cardListType == CardList.GAMELIST){
             gameList.Add(card);
             closedList.Remove(card);
+            card.GetComponent<Button>().enabled = false;
         } else if(cardListType == CardList.PLAYERLIST){
             playerList.Add(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
+            OpenCard(card);
         } else if (cardListType == CardList.OPPONENTLIST) {
             opponentList.Add(card);
             closedList.Remove(card);
-            CloseOrOpenCard(card);
+            CloseCard(card);
+            card.GetComponent<Button>().enabled = false;
         } else if(cardListType == CardList.CLOSEDLIST){
             closedList.Add(card);
         } else if(cardListType == CardList.PLAYERWINLIST){
@@ -245,15 +248,19 @@ public class DeckManager : MonoBehaviour {
 
     void CloseThreeOfFirstFourCards(){
         for(int i = 0 ; i < START_CARD_NUMBER - 1 ; i++){
-            CloseOrOpenCard(gameList[i]);
+            CloseCard(gameList[i]);
         }
     }
 
-    public void CloseOrOpenCard(GameObject card) {
+    public void CloseCard(GameObject card) {
+        if(!card.transform.GetChild(1).gameObject.active){
+            card.transform.GetChild(1).gameObject.SetActive(true);
+        }
+    }
+
+    public void OpenCard(GameObject card) {
         if(card.transform.GetChild(1).gameObject.active){
             card.transform.GetChild(1).gameObject.SetActive(false);
-        } else {
-            card.transform.GetChild(1).gameObject.SetActive(true);
         }
     }
 

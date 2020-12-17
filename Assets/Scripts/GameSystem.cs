@@ -13,12 +13,13 @@ public class GameSystem : MonoBehaviour
     int[] cardValue;
 
     private static GameSystem instance;
+    public static GameSystem Instance { get { return instance; } }
+
     // winner of last hand takes the cards on the table
     private LastHandWinner lastHandWinner;
     int lastTwoCardsPlayed = 0;
 
-    public static GameSystem Instance { get { return instance; } }
-
+   
 
     private bool lastHand = false;
 
