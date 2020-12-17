@@ -93,6 +93,7 @@ public class GameSystem : MonoBehaviour
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
+            DeckManager.Instance.RemoveAllCardsFromGameList();
         }
         GameSystem.Instance.state = GameState.OPPONENTTURN;
     }
@@ -105,6 +106,7 @@ public class GameSystem : MonoBehaviour
                 pisti.Invoke();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
+            DeckManager.Instance.RemoveAllCardsFromGameList();
         }
         GameSystem.Instance.state = GameState.PLAYERTURN;
     }

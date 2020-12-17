@@ -209,6 +209,12 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
+    public void RemoveAllCardsFromGameList(){
+        for(int i = 0; i < gameList.Count ; i++){
+            gameList.Remove(gameList[i]);
+        }
+    }
+
     void ClearGameList(){
         gameList.Clear();
     }
