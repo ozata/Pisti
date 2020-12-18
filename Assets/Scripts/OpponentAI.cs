@@ -40,13 +40,10 @@ public class OpponentAI : MonoBehaviour
 
     // TODO: AI shoudl have more Intelligence and this code should be refactored
     int ChooseCardToPlay(){
-        //opponentCardsValues.ToList<int>().ForEach(x => print(x));
         if(opponentCardsValues.Contains(DeckManager.Instance.GetCardOnTopValue()[1]) && DeckManager.Instance.gameList.Count == 1){
-            print("pişti play");
             return ValueToCard(DeckManager.Instance.GetCardOnTopValue()[1]);
         } else if(opponentCardsValues.Contains(DeckManager.JACK) && DeckManager.Instance.opponentList.Count > 1){
             int jackIndex = ValueToCard(DeckManager.JACK);
-            print("Jack Index: " + jackIndex);
             if(DeckManager.Instance.opponentList.Count == 2 && jackIndex == 0){
                 return 1;
             } else if(DeckManager.Instance.opponentList.Count == 3 && jackIndex == 0 &&

@@ -93,7 +93,6 @@ public class GameSystem : MonoBehaviour
     }
 
     IEnumerator OpponentPlay(){
-        print("Value on top: " + DeckManager.Instance.GetCardOnTopValue()[1]);
         bool jackWin = false;
         if(DeckManager.Instance.GetGameListCount() > 1){
             if(cardValue[1] == DeckManager.JACK) jackWin = true;
