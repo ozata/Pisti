@@ -19,8 +19,6 @@ public class GameSystem : MonoBehaviour
     private LastHandWinner lastHandWinner;
     int lastTwoCardsPlayed = 0;
 
-   
-
     private bool lastHand = false;
 
     private void Awake()
@@ -32,15 +30,6 @@ public class GameSystem : MonoBehaviour
             instance = this;
         }
         cardValue = new int[2];
-    }
-
-    public UnityEvent pisti;
-
-    void OnEnable(){
-        if (pisti == null){
-            pisti = new UnityEvent();
-        }
-        pisti.AddListener(ScoreManager.Instance.AddPisti);
     }
 
     public GameState state;
@@ -55,8 +44,6 @@ public class GameSystem : MonoBehaviour
     void SetupGame() {
         state = GameState.PLAYERTURN;
     }
-
-
 
     public void PlayGame(GameObject lastPlayedCard) {
         cardValue = DeckManager.Instance.GetCardValue(lastPlayedCard);
@@ -92,8 +79,7 @@ public class GameSystem : MonoBehaviour
             SoundManager.Instance.PlayCardWin();
             lastHandWinner = LastHandWinner.PLAYER;
             if(DeckManager.Instance.GetGameListCount() == 2) {
-                print("PLAYER PİŞTİ YAPTI");
-                pisti.Invoke();
+                ScoreManager.Instance.AddPisti();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
         }
@@ -108,8 +94,7 @@ public class GameSystem : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             SoundManager.Instance.PlayCardWin();
             if(DeckManager.Instance.GetGameListCount() == 2){
-                print("OPPONENT PİŞTİ YAPTI");
-                pisti.Invoke();
+                ScoreManager.Instance.AddPisti();
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
         }
@@ -127,11 +112,5 @@ public class GameSystem : MonoBehaviour
     void DealCardsToPlayers() {
         DeckManager.Instance.DealCards();
         dealCards = 0;
-    }
-
-    void OnDisable() {
-        if (pisti != null){
-            pisti.RemoveListener(ScoreManager.Instance.AddPisti);
-        }
     }
 }

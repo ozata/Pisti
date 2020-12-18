@@ -123,6 +123,7 @@ public class DeckManager : MonoBehaviour {
         FisherYatesCardDeckShuffle();
         InitCards();
         CloseThreeOfFirstFourCards();
+        OpponentAI.Instance.UpdateOpponentCardValues();
         // Assign Card On Top as CardOnTop
         CardOnTop = gameList[START_CARD_NUMBER - 1];
     }
