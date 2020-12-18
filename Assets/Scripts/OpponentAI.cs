@@ -37,18 +37,27 @@ public class OpponentAI : MonoBehaviour
         }
     }
 
+
+    // TODO: AI shoudl have more Intelligence and this code should be refactored
     int ChooseCardToPlay(){
         //opponentCardsValues.ToList<int>().ForEach(x => print(x));
         if(opponentCardsValues.Contains(DeckManager.Instance.GetCardOnTopValue()[1]) && DeckManager.Instance.gameList.Count == 1){
             print("pişti play");
             return ValueToCard(DeckManager.Instance.GetCardOnTopValue()[1]);
-        } else {
-            return 0;
+        } else if(opponentCardsValues.Contains(DeckManager.JACK) && DeckManager.Instance.opponentList.Count > 1){
+            int jackIndex = ValueToCard(DeckManager.JACK);
+            if(DeckManager.Instance.opponentList.Count == 2 && jackIndex == 0){
+                return 1;
+            } else if(DeckManager.Instance.opponentList.Count == 3 && jackIndex == 0 &&
+            DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[2])[1] != DeckManager.JACK) {
+                return 2;
+            }
         }
-
+        return 0;
     }
 
-    // This should be in DeckManager and more abstract
+    // TODO: This should return an array of integers for duplicate values, and maybe should be in DeckManager and more abstract.
+    // Return the first card that has the given value as parameter
     int ValueToCard(int value) {
         for(int i = 0 ; i < DeckManager.Instance.opponentList.Count ; i++){
             if( value == DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[i])[1]){
