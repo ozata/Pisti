@@ -62,6 +62,7 @@ public class GameSystem : MonoBehaviour
         cardValue = DeckManager.Instance.GetCardValue(lastPlayedCard);
         // Add the card to gameList, game cards on the table
         DeckManager.Instance.addCard.Invoke(lastPlayedCard, CardList.GAMELIST);
+        SoundManager.Instance.PlayPlayCard();
         if(GameSystem.Instance.state == GameState.PLAYERTURN) {
             DeckManager.Instance.playerList.Remove(lastPlayedCard);
             PlayerPlay();
@@ -88,6 +89,7 @@ public class GameSystem : MonoBehaviour
         bool jackWin = false;
         if(cardValue[1] == DeckManager.JACK && DeckManager.Instance.GetGameListCount() > 1) jackWin = true;
         if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+            SoundManager.Instance.PlayCardWin();
             lastHandWinner = LastHandWinner.PLAYER;
             if(DeckManager.Instance.GetGameListCount() == 2) {
                 print("PLAYER PİŞTİ YAPTI");
@@ -103,7 +105,8 @@ public class GameSystem : MonoBehaviour
         if(cardValue[1] == DeckManager.JACK && DeckManager.Instance.GetGameListCount() > 1) jackWin = true;
         if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
             lastHandWinner = LastHandWinner.OPPONENT;
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.5f);
+            SoundManager.Instance.PlayCardWin();
             if(DeckManager.Instance.GetGameListCount() == 2){
                 print("OPPONENT PİŞTİ YAPTI");
                 pisti.Invoke();
