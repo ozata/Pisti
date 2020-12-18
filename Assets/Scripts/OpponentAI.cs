@@ -23,7 +23,7 @@ public class OpponentAI : MonoBehaviour
     // Possible BUG: If I put Q(or any other card) on table, and win the hand and then opponent puts Q, opponent wins when there is 1 card on table
     public IEnumerator Play(){
         ChooseCardToPlay();
-        yield return new WaitForSeconds(0.8F);
+        yield return new WaitForSeconds(0.1F);
         int cardIndex = ChooseCardToPlay();
         DeckManager.Instance.OpenCard(DeckManager.Instance.opponentList[cardIndex]);
         GameSystem.Instance.PlayGame(DeckManager.Instance.opponentList[cardIndex]);
@@ -46,6 +46,7 @@ public class OpponentAI : MonoBehaviour
             return ValueToCard(DeckManager.Instance.GetCardOnTopValue()[1]);
         } else if(opponentCardsValues.Contains(DeckManager.JACK) && DeckManager.Instance.opponentList.Count > 1){
             int jackIndex = ValueToCard(DeckManager.JACK);
+            print("Jack Index: " + jackIndex);
             if(DeckManager.Instance.opponentList.Count == 2 && jackIndex == 0){
                 return 1;
             } else if(DeckManager.Instance.opponentList.Count == 3 && jackIndex == 0 &&

@@ -84,8 +84,6 @@ public class ScoreManager : MonoBehaviour
         for (int i = 0; i < scoreList.Count; i++)
         {
             cardValue = DeckManager.Instance.GetCardValue(scoreList[i]);
-            print("Score List item: " + scoreList[i]);
-            print("Score List item value: " + cardValue[1]);
             // If Jack, 1 point added
             if (cardValue[1] == DeckManager.JACK)
             {

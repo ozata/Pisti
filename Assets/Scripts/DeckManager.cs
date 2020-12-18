@@ -27,6 +27,8 @@ public class DeckManager : MonoBehaviour {
     #region Values
     public static int ACE = 1;
     public static int JACK = 11;
+    public static int QUEEN = 12;
+    public static int KING = 13;
     #endregion
 
     #region Ranks
@@ -147,28 +149,26 @@ public class DeckManager : MonoBehaviour {
         return cardValue;
     }
 
-    void AddCardObjectToList(GameObject card, CardList cardListType) {
-        if(cardListType == CardList.GAMELIST){
+    void AddCardObjectToList(GameObject card, CardList cardList) {
+        if(cardList == CardList.GAMELIST){
             gameList.Add(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = false;
-        } else if(cardListType == CardList.PLAYERLIST){
+        } else if(cardList == CardList.PLAYERLIST){
             playerList.Add(card);
             closedList.Remove(card);
             card.GetComponent<Button>().enabled = true;
             OpenCard(card);
-        } else if (cardListType == CardList.OPPONENTLIST) {
+        } else if (cardList == CardList.OPPONENTLIST) {
             opponentList.Add(card);
             closedList.Remove(card);
             CloseCard(card);
             card.GetComponent<Button>().enabled = false;
-        } else if(cardListType == CardList.CLOSEDLIST){
+        } else if(cardList == CardList.CLOSEDLIST){
             closedList.Add(card);
-        } else if(cardListType == CardList.PLAYERWINLIST){
-            print("player win");
+        } else if(cardList == CardList.PLAYERWINLIST){
             playerWinList.Add(card);
-        } else if(cardListType == CardList.OPPONENTWINLIST){
-            print("opponent win");
+        } else if(cardList == CardList.OPPONENTWINLIST){
             opponentWinList.Add(card);
         }
     }
@@ -200,12 +200,10 @@ public class DeckManager : MonoBehaviour {
     }
 
     public void AddCardsToWinningList(CardList list){
-        print(gameList.Count);
         for(int i = 0; i < gameList.Count ; i++){
             addCard.Invoke(gameList[i], list);
         }
         ClearGameList();
-        print("GameList after cleanup: " + gameList.Count);
     }
 
     public void RemoveAllCardsFromGameList(){

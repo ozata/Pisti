@@ -79,7 +79,13 @@ public class GameSystem : MonoBehaviour
             SoundManager.Instance.PlayCardWin();
             lastHandWinner = LastHandWinner.PLAYER;
             if(DeckManager.Instance.GetGameListCount() == 2) {
-                ScoreManager.Instance.AddPisti();
+                if(jackWin && DeckManager.Instance.GetCardOnTopValue()[1] == DeckManager.JACK)
+                    {
+                        ScoreManager.Instance.AddPisti();
+                    }
+                    else if(!jackWin) {
+                        ScoreManager.Instance.AddPisti();
+                    }
             }
             DeckManager.Instance.AddCardsToWinningList(CardList.PLAYERWINLIST);
         }
@@ -87,16 +93,25 @@ public class GameSystem : MonoBehaviour
     }
 
     IEnumerator OpponentPlay(){
+        print("Value on top: " + DeckManager.Instance.GetCardOnTopValue()[1]);
         bool jackWin = false;
-        if(cardValue[1] == DeckManager.JACK && DeckManager.Instance.GetGameListCount() > 1) jackWin = true;
-        if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
-            lastHandWinner = LastHandWinner.OPPONENT;
-            yield return new WaitForSeconds(0.5f);
-            SoundManager.Instance.PlayCardWin();
-            if(DeckManager.Instance.GetGameListCount() == 2){
-                ScoreManager.Instance.AddPisti();
+        if(DeckManager.Instance.GetGameListCount() > 1){
+            if(cardValue[1] == DeckManager.JACK) jackWin = true;
+            if(jackWin || cardValue[1] == DeckManager.Instance.GetCardOnTopValue()[1]){
+                yield return new WaitForSeconds(0.1f);
+                SoundManager.Instance.PlayCardWin();
+                lastHandWinner = LastHandWinner.OPPONENT;
+                if(DeckManager.Instance.GetGameListCount() == 2){
+                    if(jackWin && DeckManager.Instance.GetCardOnTopValue()[1] == DeckManager.JACK)
+                    {
+                        ScoreManager.Instance.AddPisti();
+                    }
+                    else if(!jackWin) {
+                        ScoreManager.Instance.AddPisti();
+                    }
+                }
+                DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
             }
-            DeckManager.Instance.AddCardsToWinningList(CardList.OPPONENTWINLIST);
         }
         GameSystem.Instance.state = GameState.PLAYERTURN;
     }
