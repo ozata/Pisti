@@ -29,12 +29,16 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
+        DeckManager.Instance.FirstHandWon = false;
         DeckManager.Instance.playerList.Clear();
         DeckManager.Instance.opponentList.Clear();
         DeckManager.Instance.playerWinList.Clear();
         DeckManager.Instance.opponentWinList.Clear();
         DeckManager.Instance.closedList.Clear();
         DeckManager.Instance.gameList.Clear();
+        DeckManager.Instance.playedList.Clear();
+        DeckManager.Instance.FirstHandWonByOpponent = false;
+        DeckManager.Instance.GameInitialized = false;
         DeckManager.Instance.InitDecks();
 
         buttons.SetActive(false);

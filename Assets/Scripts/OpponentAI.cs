@@ -5,8 +5,13 @@ using System.Linq;
 
 public class OpponentAI : MonoBehaviour
 {
-
+    private bool moveCard;
+    private int cardIndex;
     public HashSet<int> opponentCardsValues = new HashSet<int>();
+
+    private int[] playedCards;
+    // Opponent AI uses this variable to check if it should play Jack and get all the cards on the table.
+    private int jackThreshold;
 
     private static OpponentAI instance;
     public static OpponentAI Instance { get { return instance; } }
@@ -15,54 +20,165 @@ public class OpponentAI : MonoBehaviour
         if (instance != null && instance != this)
         {
             Destroy(this.gameObject);
-        } else {
+        }
+        else
+        {
             instance = this;
         }
     }
 
-    // Possible BUG: If I put Q(or any other card) on table, and win the hand and then opponent puts Q, opponent wins when there is 1 card on table
-    public IEnumerator Play(){
-        ChooseCardToPlay();
-        yield return new WaitForSeconds(0.1F);
-        int cardIndex = ChooseCardToPlay();
-        DeckManager.Instance.OpenCard(DeckManager.Instance.opponentList[cardIndex]);
-        GameSystem.Instance.PlayGame(DeckManager.Instance.opponentList[cardIndex]);
-        UpdateOpponentCardValues();
+    void Start()
+    {
+        moveCard = false;
+        jackThreshold = 3;
+        playedCards = new int[13];
     }
 
-    public void UpdateOpponentCardValues() {
+    void Update()
+    {
+        // Move Card Animation and PlayCard Logic
+        if (moveCard)
+        {
+            float step = DeckManager.Instance.speed * Time.deltaTime;
+            DeckManager.Instance.CurrentCard.transform.position = Vector3.MoveTowards(DeckManager.Instance.CurrentCard.transform.position, DeckManager.Instance.target.position, step);
+            if (DeckManager.Instance.CurrentCard.transform.position == DeckManager.Instance.target.position)
+            {
+                moveCard = false;
+                DeckManager.Instance.OpenCard(DeckManager.Instance.opponentList[cardIndex]);
+                GameSystem.Instance.PlayGame(DeckManager.Instance.opponentList[cardIndex]);
+                UpdateOpponentCardValues();
+            }
+        }
+    }
+
+    public IEnumerator Play()
+    {
+        yield return new WaitForSeconds(0.1F);
+        cardIndex = ChooseCardToPlay();
+        DeckManager.Instance.CurrentCard = DeckManager.Instance.opponentList[cardIndex];
+        moveCard = true;
+    }
+
+    // Use the rank of the cards as value to find if Opponent has same card on table
+    public void UpdateOpponentCardValues()
+    {
         opponentCardsValues.Clear();
-        for(int i = 0 ; i < DeckManager.Instance.opponentList.Count ; i++){
+        for (int i = 0; i < DeckManager.Instance.opponentList.Count; i++)
+        {
             opponentCardsValues.Add(DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[i])[1]);
         }
     }
 
 
-    // TODO: AI shoudl have more Intelligence and this code should be refactored
-    int ChooseCardToPlay(){
-        if(opponentCardsValues.Contains(DeckManager.Instance.GetCardOnTopValue()[1]) && DeckManager.Instance.gameList.Count == 1){
+    // This function chooses which card to play:
+    // It evaluates the situations from the most important to least important
+    // If best possible card to play is not available, function goes to another case
+    // And tries to play that case
+    int ChooseCardToPlay()
+    {
+        int iterator = 0;
+
+        // Opponent can't know first three cards that's on the table because they'll be closed
+        if (DeckManager.Instance.FirstHandWon)
+        {
+            iterator = 0;
+        }
+        else if (!DeckManager.Instance.FirstHandWon)
+        {
+            iterator = 3;
+        }
+
+        // If opponent has the card on the table, take it
+        if (opponentCardsValues.Contains(DeckManager.Instance.GetCardOnTopValue()[1]))
+        {
             return ValueToCard(DeckManager.Instance.GetCardOnTopValue()[1]);
-        } else if(opponentCardsValues.Contains(DeckManager.JACK) && DeckManager.Instance.opponentList.Count > 1){
-            int jackIndex = ValueToCard(DeckManager.JACK);
-            if(DeckManager.Instance.opponentList.Count == 2 && jackIndex == 0){
-                return 1;
-            } else if(DeckManager.Instance.opponentList.Count == 3 && jackIndex == 0 &&
-            DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[2])[1] != DeckManager.JACK) {
-                return 2;
+        }
+
+        // If there's Two of Clubs or Ten of Diamonds and Opponent has Jack, take it with jack.
+        for (int i = iterator; i < DeckManager.Instance.GetGameListCount(); i++)
+        {
+            // Ten of Diamonds
+            if ((DeckManager.Instance.gameList[i].GetComponent<Card>().Suit == DeckManager.DIAMOND && DeckManager.Instance.gameList[i].GetComponent<Card>().Rank == 10)
+            ||
+            (DeckManager.Instance.gameList[i].GetComponent<Card>().Suit == DeckManager.CLUB && DeckManager.Instance.gameList[i].GetComponent<Card>().Rank == 2)
+            ||
+            (DeckManager.Instance.gameList[i].GetComponent<Card>().Rank == DeckManager.ACE)
+            )
+            {
+                if (opponentCardsValues.Contains(DeckManager.JACK))
+                {
+                    return ValueToCard(DeckManager.JACK);
+                }
+            }
+        }
+
+        // If there are more than jackThreshold cards and has the card on top or Jack, Opponent takes it.
+        if (DeckManager.Instance.GetGameListCount() > jackThreshold)
+        {
+            if (opponentCardsValues.Contains(DeckManager.JACK))
+            {
+                return ValueToCard(DeckManager.JACK);
+            }
+        }
+
+        // If Jack is first card at hand, try not to play first card
+        // Extreme case
+        if (ValueToCard(DeckManager.JACK) == 0)
+        {
+            int o = DeckManager.Instance.opponentList.Count;
+            if (o > 1) return 1;
+            if (o > 2) return 2;
+            if (o > 3) return 3;
+        }
+
+        // Opponent AI counts the cards and plays accordingly
+        int val = MostPlayedCard();
+        int ind = ValueToCard(val);
+        return ind;
+    }
+
+    // TODO: This should return an array of integers for duplicate values, and maybe should be in DeckManager and more abstract.
+    // Return the first card that has the given value as parameter
+    int ValueToCard(int value)
+    {
+        for (int i = 0; i < DeckManager.Instance.opponentList.Count; i++)
+        {
+            if (value == DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[i])[1])
+            {
+                return i;
             }
         }
         return 0;
     }
 
-    // TODO: This should return an array of integers for duplicate values, and maybe should be in DeckManager and more abstract.
-    // Return the first card that has the given value as parameter
-    int ValueToCard(int value) {
-        for(int i = 0 ; i < DeckManager.Instance.opponentList.Count ; i++){
-            if( value == DeckManager.Instance.GetCardValue(DeckManager.Instance.opponentList[i])[1]){
-                return i;
+    int MostPlayedCard()
+    {
+        int max = 0;
+        int index = 0;
+        for (int i = 0; i < DeckManager.Instance.playedList.Count; i++)
+        {
+            int value = DeckManager.Instance.GetCardValue(DeckManager.Instance.playedList[i])[1];
+            // Index shifting
+            value -= 1;
+            playedCards[value]++;
+        }
+
+        for (int i = 0; i < playedCards.Length; i++)
+        {
+            if (playedCards[i] > max)
+            {
+                index = i;
             }
         }
-        return 0;
+
+        // Clear playedCardsList
+        for (int i = 0; i < playedCards.Length; i++)
+        {
+            playedCards[i] = 0;
+        }
+
+        // Index shifting
+        return index + 1;
     }
 
 }
