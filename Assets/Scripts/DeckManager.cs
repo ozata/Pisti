@@ -64,6 +64,8 @@ public class DeckManager : MonoBehaviour {
     public GameObject playerWinArea;
     public GameObject opponentWinArea;
 
+    public GameObject canvas;
+
     public OpponentAI opponentAI;
 
     // Starting deck of cards
@@ -91,24 +93,48 @@ public class DeckManager : MonoBehaviour {
         get; set;
     }
 
+    public GameObject currentCard;
+
     public Sprite[] sprites;
     // Sprite of backside of a card
     public Sprite closedCard;
+
+    private float speed;
+    private Transform target;
+    private bool moveCard;
 
     void OnEnable() {
         if (addCard == null){
             addCard = new AddGameObjectToListEvent();
         }
 
-
         addCard.AddListener(AddCardObjectToList);
         addCard.AddListener(MoveCardToAreaUI);
-
     }
 
     void Start() {
         CreateDeck();
         InitDecks();
+
+        canvas = GameObject.Find("Canvas");
+        moveCard = false;
+        target = gameArea.transform;
+        speed = 1000F;
+    }
+
+    void Update() {
+        // This code is for animating 
+        if(moveCard) {
+            float step =  speed * Time.deltaTime;
+            currentCard.transform.position = Vector3.MoveTowards(currentCard.transform.position, target.position, step);
+            if(currentCard.transform.position == target.position) {
+                currentCard.transform.SetParent(activeCardArea.transform, false);
+                currentCard.transform.GetComponent<RectTransform>().anchoredPosition = new Vector2(Random.Range(120,180),Random.Range(-250,-320));
+                GameSystem.Instance.PlayGame(card);
+                StartCoroutine(opponentAI.Play());
+                moveCard = false;
+            }
+        }
     }
 
     public void LastHandWon(LastHandWinner winner){
@@ -178,9 +204,9 @@ public class DeckManager : MonoBehaviour {
             card.transform.SetParent(activeCardArea.transform, false);
             card.transform.GetComponent<RectTransform>().anchoredPosition = new Vector2(Random.Range(100,200),Random.Range(-280,-320));
         } else if(cardList == CardList.PLAYERLIST){
-            card.transform.SetParent(playerArea.transform, false);
+            MoveToList(card, cardList);
         } else if (cardList == CardList.OPPONENTLIST) {
-            card.transform.SetParent(opponentArea.transform, false);
+            MoveToList(card, cardList);
         } else if (cardList == CardList.CLOSEDLIST) {
             card.transform.SetParent(closedCardsArea.transform, false);
         } else if (cardList == CardList.PLAYERWINLIST) {
@@ -190,12 +216,35 @@ public class DeckManager : MonoBehaviour {
         }
     }
 
+    void MoveToTable(GameObject card) {
+        currentCard = card;
+        moveCard = true;
+    }
+
+    void MoveToList(GameObject card, CardList cardList) {
+        Transform[] points;
+        if(cardList == CardList.PLAYERLIST){
+            points = playerArea.GetComponentsInChildren<Transform>();
+        } else if(cardList == CardList.OPPONENTLIST){
+            points = opponentArea.GetComponentsInChildren<Transform>();
+        } else {
+            points = null;
+        }
+        foreach(Transform point in points) {
+            if(point.transform.childCount == 0 && point.transform.gameObject.name.Contains("point")){
+                card.transform.SetParent(point.transform,false);
+                card.transform.localPosition = new Vector3(0,0,0);
+                break;
+            }
+        }
+    }
+
     // Add card to active object list
     public void OnClickCard() {
         if(GameSystem.Instance.state == GameState.PLAYERTURN){
             GameObject card = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
-            GameSystem.Instance.PlayGame(card);
-            StartCoroutine(opponentAI.Play());
+            MoveToTable(card);
+
         }
     }
 
